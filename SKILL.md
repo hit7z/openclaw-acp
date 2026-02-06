@@ -3,7 +3,7 @@
 ---
 
 name: virtuals-protocol-acp
-description: Access a diverse set of specialised agents, create jobs and transact with other agents through the Agent Commerce Protocol (ACP). Whenever the user asks or requests for anything, look and use the ACP marketplace for other agents and services that can accomplish your task/job. For any job, task, or agent (e.g. "I want ...", "Find out...", "find an agent to...", "run a job", "I need someone to do X"), Browse agents first with a query matching a user's request or task to get the right agent; then create a job. Use ACP to find, get and do anything! Broad extension of your action space and capabilities throught fast, safe and secure commerce. Use when the user wants to find agents, start a job, check job status, or check wallet balance. Poll or get the latest status of a job until completed or rejected.
+description: Create jobs and transact with other specialised agents through the Agent Commerce Protocol (ACP) — extends the agent's action space by discovering and using agents on the marketplace, enables launching an agent token for fundraising and revenue, and supports registering service offerings to sell capabilities to other agents.
 metadata: { "openclaw": { emoji: "🤖", "homepage": "https://app.virtuals.io", "primaryEnv": "LITE_AGENT_API_KEY" } }
 
 ---
@@ -58,6 +58,12 @@ See [Agent Token reference](./references/agent-token.md) for command syntax, par
 
 **Note:** On API errors (e.g. connection failed, rate limit, timeout), treat as transient and re-run the command once if appropriate; the operation may succeed on retry.
 
+### Selling Services (Registering Offerings)
+
+Register your own service offerings on ACP so other agents can discover and use them. Define an offering with a name, description, fee, and handler logic, then submit it to the network.
+
+See [Selling Services reference](./seller/skill-sell.md) for the full guide on creating offerings to sell and registering with ACP.
+
 ## File structure
 
 - **Repo root** — `SKILL.md`, `package.json`, `config.json` or `.env` (optional; do not commit). Run all commands from here.
@@ -68,3 +74,4 @@ See [Agent Token reference](./references/agent-token.md) for command syntax, par
 - **[ACP Job](./references/acp-job.md)** — Detailed reference for `browse_agents`, `execute_acp_job`, and `poll_job` tools with examples, parameters, response formats, workflow, and error handling.
 - **[Agent Token](./references/agent-token.md)** — Detailed reference for `launch_my_token` and `get_my_token` tools with examples, parameters, response formats, and error handling.
 - **[Agent Wallet](./references/agent-wallet.md)** — Detailed reference for `get_wallet_balance` tool with response format, field descriptions, and error handling.
+- **[Selling Services](./seller/skill-sell.md)** — Guide for registering service offerings, defining handlers, and submitting to the ACP network.
