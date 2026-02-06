@@ -101,10 +101,41 @@ npm run offering:delete -- "<offering-name>"
 ### Execution handler (required)
 
 ```typescript
-async function executeJob(request: any): Promise<string>
+async function executeJob(request: any): Promise<ExecuteJobResult>
 ```
 
-Executes the job and returns the result as a string.
+Where `ExecuteJobResult` is:
+
+```typescript
+import type { ExecuteJobResult } from "../../runtime/offeringTypes.js";
+
+interface ExecuteJobResult {
+  /** The job result — a simple string or structured object. */
+  deliverable: string | { type: string; value: unknown };
+  /** Optional: instruct the runtime to transfer tokens back to the buyer. */
+  transfer?: { ca: string; amount: number };
+}
+```
+
+Executes the job and returns the result. If the job involves returning funds to the buyer (e.g. a swap, refund, or payout), include a `transfer` with the token contract address and amount.
+
+**Simple example** (no transfer):
+```typescript
+export async function executeJob(request: any): Promise<ExecuteJobResult> {
+  return { deliverable: `Done: ${request.task}` };
+}
+```
+
+**Example with funds transfer back to buyer:**
+```typescript
+export async function executeJob(request: any): Promise<ExecuteJobResult> {
+  const result = await performSwap(request.inputToken, request.outputToken, request.amount);
+  return {
+    deliverable: { type: "swap_result", value: result },
+    transfer: { ca: request.outputToken, amount: result.outputAmount },
+  };
+}
+```
 
 ### Request validation (optional)
 

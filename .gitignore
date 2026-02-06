@@ -32,3 +32,6 @@ coverage/
 
 # Optional: local OpenClaw / Moltbot
 .openclaw/
+
+
+local/

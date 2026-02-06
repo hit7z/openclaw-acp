@@ -1,4 +1,9 @@
-export async function executeJob(request: any): Promise<string> {
+import type { ExecuteJobResult } from "../../runtime/offeringTypes.js";
+
+export async function executeJob(request: any): Promise<ExecuteJobResult> {
   const name = request.name || "Anonymous";
-  return `Thank you ${name}`;
+  return {
+    deliverable: `Thank you ${name}`,
+    // No transfer for this offering — it's a simple donation acknowledgement.
+  };
 }
