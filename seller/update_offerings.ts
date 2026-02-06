@@ -24,7 +24,7 @@ interface OfferingJson {
   /** ACP-specific fields (optional — used when registering with ACP) */
   priceV2?: PriceV2;
   slaMinutes?: number;
-  requiredFunds?: boolean;
+  requiredFunds: boolean;
   requirement?: Record<string, string>;
   deliverable?: string;
 }
@@ -90,10 +90,23 @@ function validateOfferingJson(filePath: string): ValidationResult {
     result.errors.push('"jobFee" must be a non-negative number');
   }
 
+  if (json.requiredFunds === undefined || json.requiredFunds === null) {
+    result.valid = false;
+    result.errors.push(
+      'offering.json must have a "requiredFunds" field (boolean) — explicitly set true or false'
+    );
+  } else if (typeof json.requiredFunds !== "boolean") {
+    result.valid = false;
+    result.errors.push('"requiredFunds" must be a boolean');
+  }
+
   return result;
 }
 
-function validateHandlers(filePath: string): ValidationResult {
+function validateHandlers(
+  filePath: string,
+  requiredFunds?: boolean
+): ValidationResult {
   const result: ValidationResult = { valid: true, errors: [], warnings: [] };
 
   if (!fs.existsSync(filePath)) {
@@ -157,9 +170,17 @@ function validateHandlers(filePath: string): ValidationResult {
     );
   }
 
-  if (!hasRequestAdditionalFunds) {
-    result.warnings.push(
-      'Optional: "requestAdditionalFunds" handler not found. Add it if jobs require additional funds from clients.'
+  if (requiredFunds === true && !hasRequestAdditionalFunds) {
+    result.valid = false;
+    result.errors.push(
+      '"requiredFunds" is true in offering.json, so handlers.ts must export "requestAdditionalFunds"'
+    );
+  }
+
+  if (requiredFunds === false && hasRequestAdditionalFunds) {
+    result.valid = false;
+    result.errors.push(
+      '"requiredFunds" is false in offering.json, so handlers.ts must NOT export "requestAdditionalFunds"'
     );
   }
 
@@ -195,7 +216,7 @@ function buildAcpPayload(json: OfferingJson): JobOfferingData {
     description: json.description,
     priceV2: json.priceV2 ?? { type: "fixed", value: json.jobFee },
     slaMinutes: json.slaMinutes ?? 5,
-    requiredFunds: json.requiredFunds ?? false,
+    requiredFunds: json.requiredFunds,
     requirement: json.requirement ?? {},
     deliverable: json.deliverable ?? "string",
   };
@@ -241,6 +262,7 @@ async function createOffering(offeringName: string) {
     console.log(`   ✅ Valid - Name: "${json.name}"`);
     console.log(`              Description: "${json.description}"`);
     console.log(`              Job Fee: ${json.jobFee}`);
+    console.log(`              Required Funds: ${json.requiredFunds}`);
   } else {
     console.log("   ❌ Invalid");
   }
@@ -248,7 +270,13 @@ async function createOffering(offeringName: string) {
   // Validate handlers.ts
   console.log("\n📄 Checking handlers.ts...");
   const handlersPath = path.join(offeringsDir, "handlers.ts");
-  const handlersResult = validateHandlers(handlersPath);
+  const parsedOffering: OfferingJson | null = jsonResult.valid
+    ? (JSON.parse(fs.readFileSync(offeringJsonPath, "utf-8")) as OfferingJson)
+    : null;
+  const handlersResult = validateHandlers(
+    handlersPath,
+    parsedOffering?.requiredFunds
+  );
   allErrors.push(...handlersResult.errors);
   allWarnings.push(...handlersResult.warnings);
 

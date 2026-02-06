@@ -5,6 +5,7 @@ interface OfferingConfig {
   name: string;
   description: string;
   jobFee: number;
+  requiredFunds: boolean;
 }
 
 interface JobRequest {
@@ -14,7 +15,9 @@ interface JobRequest {
 interface Handlers {
   executeJob: (request: JobRequest) => Promise<string>;
   validateRequirements?: (request: JobRequest) => boolean;
-  requestAdditionalFunds?: (request: JobRequest) => number;
+  requestAdditionalFunds?: (
+    request: JobRequest
+  ) => { amount: number; ca: string; symbol: string };
 }
 
 // =============================================================================
@@ -27,11 +30,19 @@ function accept(jobId: string): void {
   console.log(`   Status: Job accepted for processing`);
 }
 
-function requestFundsMemo(jobId: string, jobFee: number, additionalFunds: number): void {
+function requestFundsMemo(
+  jobId: string,
+  jobFee: number,
+  additionalFunds: number,
+  token?: { ca: string; symbol: string }
+): void {
   console.log(`\n💰 [ACP] requestFundsMemo() called`);
   console.log(`   Job ID: ${jobId}`);
   console.log(`   Job Fee: ${jobFee}`);
   console.log(`   Additional Funds Requested: ${additionalFunds}`);
+  if (additionalFunds > 0 && token) {
+    console.log(`   Token: ${token.symbol} (ca: ${token.ca})`);
+  }
   console.log(`   Total: ${jobFee + additionalFunds}`);
 }
 
@@ -103,6 +114,7 @@ async function processJob(
   const { config, handlers } = await loadOffering(offeringName);
   console.log(`   ✅ Loaded "${config.name}"`);
   console.log(`   Job Fee: ${config.jobFee}`);
+  console.log(`   Required Funds: ${config.requiredFunds}`);
 
   // Step 1: Validate job request
   console.log("\n" + "─".repeat(60));
@@ -130,14 +142,39 @@ async function processJob(
   console.log("Step 3: Requesting funds...");
 
   let additionalFunds = 0;
-  if (handlers.requestAdditionalFunds) {
-    additionalFunds = handlers.requestAdditionalFunds(jobRequest);
-    console.log(`   Additional funds calculated: ${additionalFunds}`);
+  let fundsTokenCa: string | undefined;
+  let fundsTokenSymbol: string | undefined;
+
+  if (config.requiredFunds) {
+    if (!handlers.requestAdditionalFunds) {
+      reject(jobId, 'Offering requires funds but "requestAdditionalFunds" is missing');
+      console.log('\n❌ Job processing aborted: missing requestAdditionalFunds\n');
+      return;
+    }
+    const funds = handlers.requestAdditionalFunds(jobRequest);
+    additionalFunds = funds.amount;
+    fundsTokenCa = funds.ca;
+    fundsTokenSymbol = funds.symbol;
+    console.log(
+      `   Additional funds requested: ${additionalFunds} ${fundsTokenSymbol} (ca: ${fundsTokenCa})`
+    );
   } else {
-    console.log("   No additional funds required (no custom handler)");
+    if (handlers.requestAdditionalFunds) {
+      reject(jobId, 'Offering does not require funds but "requestAdditionalFunds" was provided');
+      console.log('\n❌ Job processing aborted: unexpected requestAdditionalFunds\n');
+      return;
+    }
+    console.log("   No additional funds required");
   }
 
-  requestFundsMemo(jobId, config.jobFee, additionalFunds);
+  requestFundsMemo(
+    jobId,
+    config.jobFee,
+    additionalFunds,
+    fundsTokenCa && fundsTokenSymbol
+      ? { ca: fundsTokenCa, symbol: fundsTokenSymbol }
+      : undefined
+  );
 
   // Step 4: Execute the job
   console.log("\n" + "─".repeat(60));

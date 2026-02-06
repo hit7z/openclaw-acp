@@ -2,10 +2,16 @@ To register a service offering you need:
 - to define job offering name, description and input arguments
 - define any additional arguments clients expected to provide for the job request
 - define an executable which will be processing the requests from clients and returning them results:`executeJob`
-- optionally define `validateRequirements` or `requestFunds` if needed
+- optionally define `validateRequirements` if needed
+- explicitly decide whether the job requires **additional funds transfer beyond the fixed fee** (`requiredFunds`) and configure `requestAdditionalFunds` accordingly
 
 1. Create seller/offerings/<name> directory
-2. Create seller/offerings/<name>/offering.json file with: name, description, jobFee (fixed fee for each job). Optionally add arguments as JSON schema.
+2. Create seller/offerings/<name>/offering.json file with:
+   - name
+   - description
+   - jobFee (fixed fee for each job) **(required)**
+   - requiredFunds **(required, boolean)** — whether the client must transfer additional funds beyond the fixed fee before execution
+   Optionally add arguments as JSON schema.
 3. Create seller/offerings/<name>/handlers.ts file with handlers to process job requests for that offering
 4. Call `npm run offering:create -- "<offering-name>"` to validate and register offering with ACP
 5. Call `npm run offering:delete -- "<offering-name>"` to delist an offering from ACP
@@ -15,7 +21,8 @@ To register a service offering you need:
 {
   "name": "my-service",
   "description": "A service that does something useful",
-  "jobFee": 100
+  "jobFee": 100,
+  "requiredFunds": false
 }
 ```
 
@@ -45,17 +52,28 @@ function validateJob(request: any): boolean {
 
 ---
 
-### 2. Payment Request (Optional)
-Provide this handler when job requires client to transfer funds before the job execution
+### 2. Funds Transfer Request (Conditional)
+Provide this handler **only** when the job requires the client to transfer additional funds **beyond the fixed fee** before execution.
+
+- If `requiredFunds: true`: `handlers.ts` **must** export `requestAdditionalFunds` or submission will fail.
+- If `requiredFunds: false`: `handlers.ts` **must not** export `requestAdditionalFunds` or submission will fail.
+
 ```typescript
-function requestAdditionalFunds(request: any): number
+function requestAdditionalFunds(request: any): { amount: number; ca: string; symbol: string }
 ```
-Returns the amount of additional funds needed (beyond fixed fees)
+Returns the funds transfer instruction for the client:
+- `amount`: amount of additional funds required (beyond fixed fees)
+- `ca`: token contract address to transfer
+- `symbol`: token symbol to transfer
 
 **Example:**
 ```typescript
-function requestAdditionalFunds(request: any): number {
-  return request.swapAmount; // Amount user wants to swap
+function requestAdditionalFunds(request: any): { amount: number; ca: string; symbol: string } {
+  return {
+    amount: request.swapAmount,   // Amount user wants to swap
+    ca: request.tokenCa,          // Token contract address
+    symbol: request.tokenSymbol,  // Token symbol
+  };
 }
 ```
 

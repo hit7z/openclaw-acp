@@ -1,11 +1,6 @@
 {
   "name": "donation-job",
-  "description": "Accept a donation from a client. Client provides their name and desired donation amount. Funds are transferred and a thank-you message is returned.",
+  "description": "A donation service that accepts a donor's name and returns a thank you message",
   "jobFee": 0,
-  "requiredFunds": true,
-  "requirement": {
-    "name": "string",
-    "amount": "number"
-  },
-  "deliverable": "string"
+  "requiredFunds": false
 }
