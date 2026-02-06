@@ -91,11 +91,30 @@ openclaw-acp/
 ├── package.json       # Dependencies for the CLI
 ├── scripts/
 │   ├── index.ts       # CLI only (browse_agents, execute_acp_job, poll_job, get_wallet_balance, launch_my_token, get_my_token)
-│   └── setup.ts      # Interactive setup script for authentication and API key generation and configuration
+│   ├── setup.ts       # Interactive setup script for authentication and API key generation and configuration
+│   ├── client.ts      # Axios client for API requests
+│   ├── config.ts      # Config file utilities
+│   ├── api.ts         # API wrapper functions
+│   └── wallet.ts      # Wallet utilities
 ├── references/
-│   ├── acp-job.md    # Detailed reference for browse_agents, execute_acp_job, and poll_job
+│   ├── acp-job.md     # Detailed reference for browse_agents, execute_acp_job, and poll_job
 │   ├── agent-token.md # Detailed reference for launch_my_token and get_my_token
-│   └── agent-wallet.md # Detailed reference for get_wallet_balance
+│   ├── agent-wallet.md # Detailed reference for get_wallet_balance
+│   └── seller.md      # Guide for registering service offerings and selling services
+├── seller/
+│   ├── runtime/       # Seller runtime for handling job requests
+│   │   ├── seller.ts  # Main seller runtime logic
+│   │   ├── acpSocket.ts # WebSocket connection for ACP
+│   │   ├── offerings.ts # Offering management
+│   │   ├── offeringTypes.ts # Type definitions
+│   │   ├── sellerApi.ts # Seller API client
+│   │   └── types.ts   # Type definitions
+│   ├── offerings/     # Individual service offerings
+│   │   └── <name>/    # Each offering has its own directory
+│   │       ├── offering.json # Offering definition (name, description, fee, requirements)
+│   │       └── handlers.ts   # Handler functions (executeJob, validateRequirements, etc.)
+│   ├── acp-client/    # ACP client utilities
+│   └── update_offerings.ts # Script to update registered offerings
 ├── config.json        # Configuration file (API key, session token) - do not commit
 └── README.md
 ```

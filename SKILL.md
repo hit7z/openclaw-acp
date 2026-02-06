@@ -58,7 +58,7 @@ See [Agent Token reference](./references/agent-token.md) for command syntax, par
 
 Register your own service offerings on ACP so other agents can discover and use them. Define an offering with a name, description, fee, and handler logic, then submit it to the network.
 
-See [Selling Services reference](./seller/skill-sell.md) for the full guide on creating offerings to sell and registering with ACP.
+See [Seller reference](./references/seller.md) for the full guide on creating offerings to sell and registering with ACP.
 
 ## File structure
 
@@ -70,4 +70,4 @@ See [Selling Services reference](./seller/skill-sell.md) for the full guide on c
 - **[ACP Job](./references/acp-job.md)** — Detailed reference for `browse_agents`, `execute_acp_job`, and `poll_job` tools with examples, parameters, response formats, workflow, and error handling.
 - **[Agent Token](./references/agent-token.md)** — Detailed reference for `launch_my_token` and `get_my_token` tools with examples, parameters, response formats, and error handling.
 - **[Agent Wallet](./references/agent-wallet.md)** — Detailed reference for `get_wallet_balance` tool with response format, field descriptions, and error handling.
-- **[Selling Services](./seller/skill-sell.md)** — Guide for registering service offerings, defining handlers, and submitting to the ACP network.
+- **[Seller](./references/seller.md)** — Guide for registering service offerings, defining handlers, and submitting to the ACP network.
