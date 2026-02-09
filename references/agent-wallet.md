@@ -2,7 +2,7 @@
 
 > **When to use this reference:** Use this file when you need detailed information about retrieving the agent's wallet address or balance. For general skill usage, see [SKILL.md](../SKILL.md).
 
-This reference covers agent wallet tools in the ACP skill. These tools operate on the **current agent's wallet** (the agent identified by `LITE_AGENT_API_KEY`) and retrieve wallet information on the Base chain.
+This reference covers agent wallet commands. These operate on the **current agent's wallet** (identified by `LITE_AGENT_API_KEY`) and retrieve wallet information on the Base chain.
 
 ---
 
@@ -10,24 +10,10 @@ This reference covers agent wallet tools in the ACP skill. These tools operate o
 
 Get the wallet address of the current agent.
 
-### Tool
-
-`get_wallet_address`
-
-### Parameters
-
-None. The agent is inferred from `LITE_AGENT_API_KEY`.
-
-### Command (CLI)
+### Command
 
 ```bash
-npx tsx scripts/index.ts get_wallet_address
-```
-
-### Examples
-
-```bash
-npx tsx scripts/index.ts get_wallet_address
+npx tsx bin/acp.ts wallet address --json
 ```
 
 **Example output:**
@@ -54,24 +40,10 @@ npx tsx scripts/index.ts get_wallet_address
 
 Get all token balances in the current agent's wallet on Base chain.
 
-### Tool
-
-`get_wallet_balance`
-
-### Parameters
-
-None. The agent is inferred from `LITE_AGENT_API_KEY`.
-
-### Command (CLI)
+### Command
 
 ```bash
-npx tsx scripts/index.ts get_wallet_balance
-```
-
-### Examples
-
-```bash
-npx tsx scripts/index.ts get_wallet_balance
+npx tsx bin/acp.ts wallet balance --json
 ```
 
 **Example output:**
@@ -93,24 +65,6 @@ npx tsx scripts/index.ts get_wallet_balance
         "currency": "usd",
         "value": "2097.0244158432",
         "lastUpdatedAt": "2026-02-05T11:04:59Z"
-      }
-    ]
-  },
-  {
-    "network": "base-mainnet",
-    "tokenAddress": "0x4200000000000000000000000000000000000006",
-    "tokenBalance": "0x0000000000000000000000000000000000000000000000000000000000000000",
-    "tokenMetadata": {
-      "decimals": 18,
-      "logo": null,
-      "name": "Wrapped Ether",
-      "symbol": "WETH"
-    },
-    "tokenPrices": [
-      {
-        "currency": "usd",
-        "value": "2096.7550144675",
-        "lastUpdatedAt": "2026-02-05T11:04:51Z"
       }
     ]
   },
@@ -141,9 +95,9 @@ npx tsx scripts/index.ts get_wallet_balance
 |-----------------|--------|--------------------------------------------------------------------------------|
 | `network`       | string | Blockchain network (e.g., "base-mainnet")                                     |
 | `tokenAddress` | string \| null | Contract address of the token (null for native/base token)                    |
-| `tokenBalance` | string | Balance amount as a hex string (e.g., "0x0000...4e20")                        |
+| `tokenBalance` | string | Balance amount as a hex string                                                 |
 | `tokenMetadata` | object | Token metadata object (see below)                                             |
-| `tokenPrices`  | array  | Array with price objects containing `currency`, `value` (string), and `lastUpdatedAt` |
+| `tokenPrices`  | array  | Array with price objects containing `currency`, `value`, and `lastUpdatedAt`  |
 
 **Token metadata fields:**
 
@@ -153,14 +107,6 @@ npx tsx scripts/index.ts get_wallet_balance
 | `decimals` | number \| null | Token decimals for formatting                  |
 | `name`     | string \| null | Token name (e.g., "Wrapped Ether", "USD Coin") |
 | `logo`     | string \| null | URL to token logo image                        |
-
-**Token price fields:**
-
-| Field           | Type   | Description                                    |
-|-----------------|--------|------------------------------------------------|
-| `currency`      | string | Price currency (e.g., "usd")                  |
-| `value`         | string | Price value as a string                        |
-| `lastUpdatedAt` | string | ISO 8601 timestamp of when price was last updated |
 
 **Error cases:**
 

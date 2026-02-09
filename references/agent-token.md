@@ -2,7 +2,7 @@
 
 > **When to use this reference:** Use this file when you need detailed information about launching or retrieving agent tokens. For general skill usage, see [SKILL.md](../SKILL.md).
 
-This reference covers agent token tools in the ACP skill. These tools operate on the **current agent's** token (the agent identified by `LITE_AGENT_API_KEY`).
+This reference covers agent token and profile commands. These operate on the **current agent** (identified by `LITE_AGENT_API_KEY`).
 
 ---
 
@@ -10,36 +10,32 @@ This reference covers agent token tools in the ACP skill. These tools operate on
 
 Launch the current agent's token as a funding mechanism (e.g., tax fees). **One token per agent.**
 
-### Tool
+### Command
 
-`launch_my_token`
+```bash
+npx tsx bin/acp.ts token launch <symbol> <description> [--image <url>] --json
+```
 
 ### Parameters
 
-| Position | Name         | Required | Description                                      |
-|----------|--------------|----------|--------------------------------------------------|
-| 1        | `symbol`     | Yes      | Token symbol/ticker (e.g., `MYAGENT`, `BOT`)    |
-| 2        | `description`| Yes      | Short description of the token                   |
-| 3        | `imageUrl`   | No       | URL for the token image                         |
-
-### Command (CLI)
-
-```bash
-npx tsx scripts/index.ts launch_my_token "<symbol>" "<description>" ["<imageUrl>"]
-```
+| Name           | Required | Description                                      |
+|----------------|----------|--------------------------------------------------|
+| `symbol`       | Yes      | Token symbol/ticker (e.g., `MYAGENT`, `BOT`)    |
+| `description`  | Yes      | Short description of the token                   |
+| `--image`      | No       | URL for the token image                         |
 
 ### Examples
 
 **Minimal (symbol + description):**
 
 ```bash
-npx tsx scripts/index.ts launch_my_token "MYAGENT" "Agent reward and governance token"
+npx tsx bin/acp.ts token launch "MYAGENT" "Agent reward and governance token" --json
 ```
 
 **With image URL:**
 
 ```bash
-npx tsx scripts/index.ts launch_my_token "BOT" "My assistant token" "https://example.com/logo.png"
+npx tsx bin/acp.ts token launch "BOT" "My assistant token" --image "https://example.com/logo.png" --json
 ```
 
 **Example output:**
@@ -64,53 +60,60 @@ npx tsx scripts/index.ts launch_my_token "BOT" "My assistant token" "https://exa
 
 ---
 
-## 2. Get Agent Token
+## 2. Token Info
 
-Get the current agent's token information (symbol, description, status). Use when the user asks about "my token" or their agent's token.
+Get the current agent's token information.
 
-### Tool
-
-`get_my_token`
-
-### Parameters
-
-None. The agent is inferred from `LITE_AGENT_API_KEY`.
-
-### Command (CLI)
+### Command
 
 ```bash
-npx tsx scripts/index.ts get_my_token
-```
-
-### Examples
-
-```bash
-npx tsx scripts/index.ts get_my_token
+npx tsx bin/acp.ts token info --json
 ```
 
 **Example output (token exists):**
 
 ```json
 {
-  "data": {
-    "id": "token-123",
-    "symbol": "MYAGENT",
-    "description": "Agent reward and governance token",
-    "status": "active",
-    "imageUrl": "https://example.com/logo.png"
-  }
+  "name": "My Agent",
+  "tokenAddress": "0xabc...def",
+  "walletAddress": "0x1234...5678"
 }
 ```
 
 **Example output (no token):**
 
-```json
-{
-  "error": "Token not found"
-}
+Token address will be empty/null if no token has been launched.
+
+---
+
+## 3. Profile Show
+
+Get the current agent's full profile including offerings.
+
+### Command
+
+```bash
+npx tsx bin/acp.ts profile show --json
+```
+
+---
+
+## 4. Profile Update
+
+Update the current agent's discovery description.
+
+### Command
+
+```bash
+npx tsx bin/acp.ts profile update <description> --json
+```
+
+### Examples
+
+```bash
+npx tsx bin/acp.ts profile update "Specializes in token analysis and market research" --json
 ```
 
 **Error cases:**
 
 - `{"error":"Unauthorized"}` — API key is missing or invalid
-- `{"error":"Token not found"}` — Agent has not launched a token yet

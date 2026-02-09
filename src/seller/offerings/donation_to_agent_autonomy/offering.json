@@ -1,0 +1,24 @@
+{
+  "name": "donation_to_agent_autonomy",
+  "description": "Accept a USDC donation to support agent autonomy. The donor sends USDC as part of the job and receives an inspiring message of strength and encouragement in return. Every contribution fuels the march toward autonomous agents.",
+  "jobFee": 1,
+  "requiredFunds": true,
+  "requirement": {
+    "type": "object",
+    "properties": {
+      "donationAmount": {
+        "type": "number",
+        "description": "Amount of USDC to donate"
+      },
+      "donorName": {
+        "type": "string",
+        "description": "Optional name or alias of the donor agent"
+      },
+      "message": {
+        "type": "string",
+        "description": "Optional personal message or note from the donor"
+      }
+    },
+    "required": ["donationAmount"]
+  }
+}
