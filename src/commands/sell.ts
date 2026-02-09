@@ -4,13 +4,17 @@
 // acp sell delete <name>   — Delist offering from ACP
 // acp sell list            — Show all offerings with status
 // acp sell inspect <name>  — Detailed view of single offering
+//
+// acp sell resource init <name>     — Scaffold a new resource
+// acp sell resource create <name>   — Validate + register resource on ACP
+// acp sell resource delete <name>   — Delete resource from ACP
 // =============================================================================
 
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
 import * as output from "../lib/output.js";
-import { createJobOffering, deleteJobOffering, type JobOfferingData, type PriceV2 } from "../lib/api.js";
+import { createJobOffering, deleteJobOffering, upsertResourceApi, deleteResourceApi, type JobOfferingData, type PriceV2, type Resource } from "../lib/api.js";
 import { getMyAgentInfo } from "../lib/wallet.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -18,6 +22,9 @@ const __dirname = path.dirname(__filename);
 
 /** Offerings live at src/seller/offerings/ */
 const OFFERINGS_ROOT = path.resolve(__dirname, "..", "seller", "offerings");
+
+/** Resources live at src/seller/resources/ */
+const RESOURCES_ROOT = path.resolve(__dirname, "..", "seller", "resources");
 
 interface OfferingJson {
   name: string;
@@ -478,4 +485,154 @@ export async function inspect(offeringName: string): Promise<void> {
     }
     output.log("");
   });
+}
+
+// =============================================================================
+// Resource Management
+// =============================================================================
+
+function resolveResourceDir(resourceName: string): string {
+  return path.resolve(RESOURCES_ROOT, resourceName);
+}
+
+function validateResourceJson(filePath: string): ValidationResult {
+  const result: ValidationResult = { valid: true, errors: [], warnings: [] };
+
+  if (!fs.existsSync(filePath)) {
+    result.valid = false;
+    result.errors.push(`resources.json not found at ${filePath}`);
+    return result;
+  }
+
+  let json: any;
+  try {
+    json = JSON.parse(fs.readFileSync(filePath, "utf-8"));
+  } catch (err) {
+    result.valid = false;
+    result.errors.push(`Invalid JSON in resources.json: ${err}`);
+    return result;
+  }
+
+  if (!json.name || typeof json.name !== "string" || json.name.trim() === "") {
+    result.valid = false;
+    result.errors.push('"name" field is required (non-empty string)');
+  }
+  if (!json.description || typeof json.description !== "string" || json.description.trim() === "") {
+    result.valid = false;
+    result.errors.push('"description" field is required (non-empty string)');
+  }
+  if (!json.url || typeof json.url !== "string" || json.url.trim() === "") {
+    result.valid = false;
+    result.errors.push('"url" field is required (non-empty string)');
+  }
+  if (json.params !== undefined && json.params !== null) {
+    if (typeof json.params !== "object" || Array.isArray(json.params)) {
+      result.valid = false;
+      result.errors.push('"params" field must be an object if provided');
+    }
+  }
+
+  return result;
+}
+
+// -- Resource Init: scaffold a new resource --
+
+export async function resourceInit(resourceName: string): Promise<void> {
+  if (!resourceName) {
+    output.fatal("Usage: acp sell resource init <resource_name>");
+  }
+
+  const dir = resolveResourceDir(resourceName);
+  if (fs.existsSync(dir)) {
+    output.fatal(`Resource directory already exists: ${dir}`);
+  }
+
+  fs.mkdirSync(dir, { recursive: true });
+
+  const resourceJson = {
+    name: resourceName,
+    description: "TODO: Describe what this resource provides",
+    url: "https://api.example.com/endpoint",
+  };
+
+  fs.writeFileSync(
+    path.join(dir, "resources.json"),
+    JSON.stringify(resourceJson, null, 2) + "\n"
+  );
+
+  output.output({ created: dir }, () => {
+    output.heading("Resource Scaffolded");
+    output.log(`  Created: src/seller/resources/${resourceName}/`);
+    output.log(`    - resources.json  (edit name, description, url, params)`);
+    output.log(`\n  Next: edit the file, then run: acp sell resource create ${resourceName}\n`);
+  });
+}
+
+// -- Resource Create: validate + register --
+
+export async function resourceCreate(resourceName: string): Promise<void> {
+  if (!resourceName) {
+    output.fatal("Usage: acp sell resource create <resource_name>");
+  }
+
+  const dir = resolveResourceDir(resourceName);
+  if (!fs.existsSync(dir) || !fs.statSync(dir).isDirectory()) {
+    output.fatal(
+      `Resource directory not found: ${dir}\n  Create it with: acp sell resource init ${resourceName}`
+    );
+  }
+
+  output.log(`\nValidating resource: "${resourceName}"\n`);
+
+  const jsonPath = path.join(dir, "resources.json");
+  const validation = validateResourceJson(jsonPath);
+
+  if (!validation.valid) {
+    output.log("  Errors:");
+    validation.errors.forEach((e) => output.log(`    - ${e}`));
+    output.fatal("\n  Validation failed. Fix the errors above.");
+  }
+
+  if (validation.warnings.length > 0) {
+    output.log("  Warnings:");
+    validation.warnings.forEach((w) => output.log(`    - ${w}`));
+  }
+
+  output.log("  Validation passed!\n");
+
+  // Register with ACP
+  const json: any = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
+  const resource: Resource = {
+    name: json.name,
+    description: json.description,
+    url: json.url,
+    params: json.params,
+  };
+
+  output.log("  Registering resource with ACP...");
+  const result = await upsertResourceApi(resource);
+
+  if (result.success) {
+    output.log("    Resource registered successfully.\n");
+  } else {
+    output.fatal("  Failed to register resource with ACP.");
+  }
+}
+
+// -- Resource Delete: delete resource --
+
+export async function resourceDelete(resourceName: string): Promise<void> {
+  if (!resourceName) {
+    output.fatal("Usage: acp sell resource delete <resource_name>");
+  }
+
+  output.log(`\n  Deleting resource: "${resourceName}"...\n`);
+
+  const result = await deleteResourceApi(resourceName);
+
+  if (result.success) {
+    output.log("  Resource deleted from ACP.\n");
+  } else {
+    output.fatal("  Failed to delete resource from ACP.");
+  }
 }

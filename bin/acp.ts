@@ -67,7 +67,9 @@ Commands:
   token info                             Get agent token details
 
   profile show                           Show full agent profile
-  profile update <description>           Update agent description
+  profile update name <value>            Update agent name
+  profile update description <value>    Update agent description
+  profile update profilePic <value>     Update agent profile picture URL
 
   agent list                              Show all agents (syncs from server)
   agent create <name>                    Create a new agent
@@ -77,7 +79,10 @@ Commands:
   sell create <name>                     Validate + register offering on ACP
   sell delete <name>                     Delist offering from ACP
   sell list                              Show all offerings with status
-  sell inspect <name>                    Detailed view of an offering
+  sell inspect <name>                   Detailed view of an offering
+  sell resource init <name>              Scaffold a new resource
+  sell resource create <name>            Validate + register resource on ACP
+  sell resource delete <name>            Delete resource from ACP
 
   serve start                            Start the seller runtime
   serve stop                             Stop the seller runtime
@@ -142,13 +147,21 @@ Subcommands:
 acp profile — Manage your agent profile
 
 Subcommands:
-  show       Show your full agent profile
-  update <description>
+  show                    Show your full agent profile
+  
+  update name <value>     Update your agent's name
+    Example: acp profile update name "MyAgent"
+  
+  update description <value>
     Update your agent's marketplace description.
-    Example: acp profile update "Specializes in trading and analysis"
+    Example: acp profile update description "Specializes in trading and analysis"
+  
+  update profilePic <value>
+    Update your agent's profile picture URL.
+    Example: acp profile update profilePic "https://example.com/avatar.png"
 `,
   sell: `
-acp sell — Create and manage service offerings
+acp sell — Create and manage service offerings and resources
 
 Subcommands:
   init <name>       Scaffold a new offering (creates template files)
@@ -156,6 +169,10 @@ Subcommands:
   delete <name>     Delist offering from ACP
   list              Show all offerings with status
   inspect <name>    Detailed view of a single offering
+
+  resource init <name>     Scaffold a new resource (creates template files)
+  resource create <name>  Validate and register resource on ACP
+  resource delete <name>   Delete resource from ACP
 
 Example workflow:
   acp sell init my_service
@@ -309,8 +326,9 @@ async function main(): Promise<void> {
       const profile = await import("../src/commands/profile.js");
       if (subcommand === "show") return profile.show();
       if (subcommand === "update") {
-        const desc = rest.join(" ");
-        return profile.update(desc);
+        const key = rest[0];
+        const value = rest.slice(1).join(" ");
+        return profile.update(key, value);
       }
       console.log(COMMAND_HELP.profile);
       return;
@@ -318,6 +336,14 @@ async function main(): Promise<void> {
 
     case "sell": {
       const sell = await import("../src/commands/sell.js");
+      if (subcommand === "resource") {
+        const resourceSubcommand = rest[0];
+        if (resourceSubcommand === "init") return sell.resourceInit(rest[1]);
+        if (resourceSubcommand === "create") return sell.resourceCreate(rest[1]);
+        if (resourceSubcommand === "delete") return sell.resourceDelete(rest[1]);
+        console.log(COMMAND_HELP.sell);
+        return;
+      }
       if (subcommand === "init") return sell.init(rest[0]);
       if (subcommand === "create") return sell.create(rest[0]);
       if (subcommand === "delete") return sell.del(rest[0]);

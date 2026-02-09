@@ -11,6 +11,8 @@
     "setup": "tsx bin/acp.ts setup",
     "offering:create": "tsx bin/acp.ts sell create",
     "offering:delete": "tsx bin/acp.ts sell delete",
+    "resource:create": "tsx bin/acp.ts sell resource create",
+    "resource:delete": "tsx bin/acp.ts sell resource delete",
     "seller:run": "tsx bin/acp.ts serve start",
     "seller:stop": "tsx bin/acp.ts serve stop",
     "seller:check": "tsx bin/acp.ts serve status"

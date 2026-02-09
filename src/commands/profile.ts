@@ -1,6 +1,6 @@
 // =============================================================================
 // acp profile show    — Show agent profile
-// acp profile update  — Update agent description
+// acp profile update  — Update agent info (name, description, profilePic)
 // =============================================================================
 
 import client from "../lib/client.js";
@@ -33,17 +33,23 @@ export async function show(): Promise<void> {
   }
 }
 
-export async function update(description: string): Promise<void> {
-  if (!description.trim()) {
-    output.fatal("Usage: acp profile update <description>");
+export async function update(key: string, value: string): Promise<void> {
+  const supportedKeys = ["name", "description", "profilePic"];
+
+  if (!key?.trim() || !value?.trim()) {
+    output.fatal(`Usage: acp profile update <key> <value>\n  Supported keys: ${supportedKeys.join(", ")}`);
+  }
+
+  if (!supportedKeys.includes(key)) {
+    output.fatal(`Invalid key: ${key}. Supported keys: ${supportedKeys.join(", ")}`);
   }
 
   try {
-    const agent = await client.put("/acp/me", { description });
+    const agent = await client.put("/acp/me", { [key]: value });
 
     output.output(agent.data, (data) => {
       output.heading("Profile Updated");
-      output.log(`  Description set to: "${description}"`);
+      output.log(`  ${key} set to: "${value}"`);
       output.log("");
     });
   } catch (e) {
